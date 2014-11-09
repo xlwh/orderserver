@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+           http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+
+	<!-- 配置数据源 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="com.mysql.jdbc.Driver"></property>  
+	    <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/order?useUnicode=true&amp;characterEncoding=UTF-8"></property>  
+	    <property name="user" value="root"></property> 
+	    <property name="password" value="thwl"></property>  
+	    <property name="acquireIncrement" value="10"></property>  
+	    <property name="initialPoolSize" value="10"></property>  
+	    <property name="maxIdleTime" value="3000"></property>  
+	    <property name="maxPoolSize" value="100"></property>  
+	    <property name="minPoolSize" value="20"></property>  
+	    <property name="acquireRetryDelay" value="1000"></property>  
+	    <property name="acquireRetryAttempts" value="60"></property>  
+	    <property name="breakAfterAcquireFailure" value="false"></property>  
+	</bean>
+
+	<!-- 配置会话工厂 -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+	    <property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
+		</property>
+        
+        <!-- 自动扫描数据库实体 -->
+		<property name="packagesToScan">
+			<list>
+				<value>com.zhang.beans.product</value>
+				<value>com.zhang.beans.users</value>
+				<value>com.zhang.beans.book</value>
+				<value>com.zhang.beans.place</value>
+            </list>
+		</property>
+	</bean>
+
+    <!-- 扫描注解 -->
+	<context:component-scan base-package="com.zhang.base.impl.dao"/>
+    <context:component-scan base-package="com.zhang.dao.users.impl"/>
+	
+    <bean id="hibernateTemplate" class="org.springframework.orm.hibernate3.HibernateTemplate">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<!-- 配置事务管理器bean,使用HibernateTransactionManager事务管理器 -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<!-- 为事务管理器注入sessionFactory" -->
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<!-- 配置事务拦截器Bean -->
+	<bean id="transactionInterceptor" class="org.springframework.transaction.interceptor.TransactionInterceptor">
+		<!-- 为事务拦截器bean注入一个事物管理器 -->
+		<property name="transactionManager" ref="transactionManager"></property>
+		<property name="transactionAttributes">
+			<!-- 定义事务传播属性 -->
+			<props>
+				<prop key="save">PROPAGATION_REQUIRED</prop>
+				<prop key="update">PROPAGATION_REQUIRED</prop>
+				<prop key="remove">PROPAGATION_REQUIRED</prop>
+			</props>
+		</property>
+	</bean>
+
+
+
+
+	<!-- <bean name="account" class="com.zhang.test.rmi.AccountService"/> <bean 
+		name="serviceExporter" class="org.springframework.remoting.rmi.RmiServiceExporter"> 
+		<property name="serviceName" value="account"/> 配置服务名 <property name="service" 
+		ref="account"/> 配置服务的实现类注入 <property name="serviceInterface" value="com.zhang.test.rmi.Account"/> 
+		暴露远程接口 <property name="registryPort" value="8080"/> 注册服务端口 <property name="servicePort" 
+		value="8080"/> 远程服务端口 </bean> -->
+</beans>
